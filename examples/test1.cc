@@ -1,11 +1,16 @@
 
 #include <somnus/yarn.hpp>
 
-#include <chrono>
-#include <thread>
-
-#include <cstdio>
-
+/**
+ * This example showcases the base functionality supported by somnus: 
+ *      use of continuations to switch fibers.
+ *
+ * Output:
+ *      PART 1
+ *      [ ~1 second pause ]
+ *      PART 2
+ *      [ ~1 second pause ]
+ */
 int main(int argc, char* argv[])
 {
     auto yarn = std::make_shared<somnus::Yarn>();

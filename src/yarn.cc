@@ -1,6 +1,7 @@
 
 #include <somnus/yarn.hpp>
 
+#include <stdexcept>
 #include <boost/coroutine/coroutine.hpp>
 
 using namespace somnus;
@@ -112,19 +113,54 @@ namespace somnus
         }
     }
 
-    std::shared_ptr<Yarn> this_yarn() { return _yarn_context; }
-    std::shared_ptr<Fiber> this_fiber() { return _fiber_context; }
-    void set_this_yarn(std::shared_ptr<Yarn> yarn) { _yarn_context = yarn; }
-    void set_this_fiber(std::shared_ptr<Fiber> fiber) { _fiber_context = fiber; }
+    std::shared_ptr<Yarn> this_yarn() 
+    { 
+        if(_yarn_context == nullptr)
+        {
+            throw std::runtime_error("Call to this_yarn() made outside of fiber.");
+        }
+
+        return _yarn_context; 
+    }
+
+    std::shared_ptr<Fiber> this_fiber() 
+    { 
+        if(_fiber_context == nullptr)
+        {
+            throw std::runtime_error("Call to this_fiber() made outside of fiber.");
+        }
+
+        return _fiber_context; 
+    }
+
+    void set_this_yarn(std::shared_ptr<Yarn> yarn) 
+    { 
+        _yarn_context = yarn; 
+    }
+
+    void set_this_fiber(std::shared_ptr<Fiber> fiber) 
+    { 
+        _fiber_context = fiber; 
+    }
 
     void* yield()
     {
+        if(_fiber_context == nullptr)
+        {
+            throw std::runtime_error("Call to yield() made outside of fiber.");
+        }
+
         (*(_fiber_context->_coro_context))();
         return _fiber_context->_yield_context;
     }
     
     void defer()
     {
+        if(_yarn_context == nullptr)
+        {
+            throw std::runtime_error("Call to defer() made outside of fiber.");
+        }
+
         _yarn_context->defer();
     }
 

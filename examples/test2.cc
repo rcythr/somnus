@@ -1,6 +1,25 @@
 
 #include <somnus/channel.hpp>
 
+/**
+ * This example shows the transfer of information from one yarn to another via a channel 
+ *      with a non-pointer type. The consumer yields if no data is in the channel. It resumes
+ *      executing only when information is available.
+ *
+ * Output:
+ *      [ ~1 second pause ]
+ *      0
+ *      1
+ *      2
+ *      3
+ *      4
+ *      5
+ *      6
+ *      7
+ *      8
+ *      9
+ *      [ ~1 second pause ]
+ */
 int main(int argc, char* argv[])
 {
     somnus::Channel<int> channel;
@@ -10,7 +29,7 @@ int main(int argc, char* argv[])
 
     consumer->run([&] ()
     {
-        for(int i=0; i < 200; ++i)
+        for(int i=0; i < 10; ++i)
         {
             printf("%d\n", channel.pop());
         }
@@ -20,7 +39,7 @@ int main(int argc, char* argv[])
     
     producer->run([&] () 
     {
-        for(int i = 0; i < 200; ++i)
+        for(int i = 0; i < 10; ++i)
         {
             channel.push(i);
         }
