@@ -1,6 +1,6 @@
 #pragma once
 
-#include "actor.hpp"
+#include <somnus/actor.hpp>
 
 #include <condition_variable>
 #include <mutex>

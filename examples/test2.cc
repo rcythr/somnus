@@ -1,6 +1,5 @@
 
-#include "actor.hpp"
-#include "channel.hpp"
+#include <somnus/channel.hpp>
 
 int main(int argc, char* argv[])
 {

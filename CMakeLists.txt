@@ -14,7 +14,7 @@ file(GLOB_RECURSE SOURCES "src/*.cc")
 add_library(somnus ${SOURCES})
 
 # Include our .hpp files.
-include_directories(${CMAKE_SOURCE_DIR}/include)
+include_directories(${CMAKE_SOURCE_DIR})
 
 # Include Boost
 find_package(Boost REQUIRED coroutine context)

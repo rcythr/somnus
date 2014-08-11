@@ -1,5 +1,5 @@
 
-#include <actor.hpp>
+#include <somnus/actor.hpp>
 
 #include <chrono>
 #include <thread>
