@@ -1,5 +1,5 @@
 
-#include <somnus/actor.hpp>
+#include <somnus/yarn.hpp>
 
 #include <chrono>
 #include <thread>
@@ -8,15 +8,15 @@
 
 int main(int argc, char* argv[])
 {
-    auto actor = std::make_shared<somnus::Actor>();
+    auto yarn = std::make_shared<somnus::Yarn>();
 
-    std::shared_ptr<somnus::Task> task = nullptr;
+    std::shared_ptr<somnus::Fiber> fiber = nullptr;
 
-    actor->run([&] () 
+    yarn->run([&] () 
     {
         printf("PART 1\n");
 
-        task = somnus::this_task();
+        fiber = somnus::this_fiber();
         somnus::yield();
 
         printf("PART 2\n");
@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
 
     std::this_thread::sleep_for(std::chrono::seconds(1));
 
-    actor->run(task);
+    yarn->run(fiber);
 
     std::this_thread::sleep_for(std::chrono::seconds(1));
 

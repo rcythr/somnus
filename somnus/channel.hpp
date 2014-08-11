@@ -1,6 +1,6 @@
 #pragma once
 
-#include <somnus/actor.hpp>
+#include <somnus/yarn.hpp>
 
 #include <condition_variable>
 #include <mutex>
@@ -30,10 +30,10 @@ namespace somnus
             }
             else
             {
-                std::shared_ptr<Actor> actor = this_actor();
-                std::shared_ptr<Task> task = this_task();
+                std::shared_ptr<Yarn> yarn = this_yarn();
+                std::shared_ptr<Fiber> fiber = this_fiber();
 
-                _waiting_tasks.push(std::tie(actor, task));
+                _waiting_fibers.push(std::tie(yarn, fiber));
 
                 _m.unlock();
 
@@ -45,18 +45,18 @@ namespace somnus
         {
             _m.lock();
 
-            if(!_waiting_tasks.empty())
+            if(!_waiting_fibers.empty())
             {
-                auto actor_task = _waiting_tasks.front();
-                _waiting_tasks.pop();
+                auto yarn_fiber = _waiting_fibers.front();
+                _waiting_fibers.pop();
 
                 _m.unlock();
                 
-                auto actor = std::get<0>(actor_task);
-                auto task = std::get<1>(actor_task);
+                auto yarn = std::get<0>(yarn_fiber);
+                auto fiber = std::get<1>(yarn_fiber);
 
-                set_yield_data(task, t);
-                actor->run(task);
+                set_yield_data(fiber, t);
+                yarn->run(fiber);
                 return;
             }
             else
@@ -69,7 +69,7 @@ namespace somnus
     private:
         std::mutex _m;
         std::queue<void*> _queue;
-        std::queue<std::tuple<std::shared_ptr<Actor>, std::shared_ptr<Task>>> _waiting_tasks;
+        std::queue<std::tuple<std::shared_ptr<Yarn>, std::shared_ptr<Fiber>>> _waiting_fibers;
     };
 
     // Channel for non-pointer types.
@@ -95,10 +95,10 @@ namespace somnus
             }
             else
             {
-                std::shared_ptr<Actor> actor = this_actor();
-                std::shared_ptr<Task> task = this_task();
+                std::shared_ptr<Yarn> yarn = this_yarn();
+                std::shared_ptr<Fiber> fiber = this_fiber();
 
-                _waiting_tasks.push(std::tie(actor, task));
+                _waiting_fibers.push(std::tie(yarn, fiber));
 
                 _m.unlock();
 
@@ -117,18 +117,18 @@ namespace somnus
 
             _m.lock();
 
-            if(!_waiting_tasks.empty())
+            if(!_waiting_fibers.empty())
             {
-                auto actor_task = _waiting_tasks.front();
-                _waiting_tasks.pop();
+                auto yarn_fiber = _waiting_fibers.front();
+                _waiting_fibers.pop();
 
                 _m.unlock();
                 
-                auto actor = std::get<0>(actor_task);
-                auto task = std::get<1>(actor_task);
+                auto yarn = std::get<0>(yarn_fiber);
+                auto fiber = std::get<1>(yarn_fiber);
 
-                set_yield_data(task, t);
-                actor->run(task);
+                set_yield_data(fiber, t);
+                yarn->run(fiber);
                 return;
             }
             else
@@ -141,7 +141,7 @@ namespace somnus
     private:
         std::mutex _m;
         std::queue<void*> _queue;
-        std::queue<std::tuple<std::shared_ptr<Actor>, std::shared_ptr<Task>>> _waiting_tasks;
+        std::queue<std::tuple<std::shared_ptr<Yarn>, std::shared_ptr<Fiber>>> _waiting_fibers;
     };
 
 }

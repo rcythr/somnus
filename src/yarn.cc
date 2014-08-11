@@ -1,5 +1,5 @@
 
-#include <somnus/actor.hpp>
+#include <somnus/yarn.hpp>
 
 #include <boost/coroutine/coroutine.hpp>
 
@@ -7,14 +7,14 @@ using namespace somnus;
 
 typedef boost::coroutines::coroutine<void()> coro;
 
-thread_local std::shared_ptr<Actor> _actor_context = nullptr;
-thread_local std::shared_ptr<Task> _task_context = nullptr;
+thread_local std::shared_ptr<Yarn> _yarn_context = nullptr;
+thread_local std::shared_ptr<Fiber> _fiber_context = nullptr;
 
 namespace somnus
 {
-    struct Task 
+    struct Fiber 
     {
-        Task(std::function<void()> fn)
+        Fiber(std::function<void()> fn)
             : _fn(fn)
             , _coroutine(nullptr)
             , _coro_context(nullptr)
@@ -46,21 +46,21 @@ namespace somnus
         void* _yield_context;
     };
 
-    Actor::Actor(ThreadMode mode)
+    Yarn::Yarn(ThreadMode mode)
     {
         if(mode == ThreadMode::spawn)
         {
-            _t = std::thread(std::bind(&Actor::start, this));
+            _t = std::thread(std::bind(&Yarn::start, this));
         }
     }
 
-    void Actor::start()
+    void Yarn::start()
     {
-        set_this_actor(shared_from_this());
+        set_this_yarn(shared_from_this());
 
         while(true)
         {
-            std::shared_ptr<Task> task;
+            std::shared_ptr<Fiber> fiber;
             
             {
                 std::unique_lock<std::mutex> ul(_m);
@@ -69,32 +69,32 @@ namespace somnus
                     _cv.wait(ul);
                 }
 
-                task = _waiting.front();
+                fiber = _waiting.front();
                 _waiting.pop();
             }
            
-            set_this_task(task);
-            task->run();
+            set_this_fiber(fiber);
+            fiber->run();
         }
     }
 
-    void Actor::run(std::function<void()> fn)
+    void Yarn::run(std::function<void()> fn)
     {
-        run(std::make_shared<Task>(fn));
+        run(std::make_shared<Fiber>(fn));
     }
 
-    void Actor::run(std::shared_ptr<Task> task)
+    void Yarn::run(std::shared_ptr<Fiber> fiber)
     {
         {
             std::unique_lock<std::mutex> ul(_m);
-            _waiting.push(task);
+            _waiting.push(fiber);
         }
         _cv.notify_one();
     }
 
-    void Actor::defer()
+    void Yarn::defer()
     {
-        std::shared_ptr<Task> task = this_task();
+        std::shared_ptr<Fiber> fiber = this_fiber();
         bool shouldDefer = false;
 
         {
@@ -102,33 +102,33 @@ namespace somnus
             if(!_waiting.empty())
             {
                 shouldDefer = true;
-                _waiting.push(task);
+                _waiting.push(fiber);
             }
         }
 
         if(shouldDefer)
         {
-            (*(task->_coro_context))();
+            (*(fiber->_coro_context))();
         }
     }
 
-    std::shared_ptr<Actor> this_actor() { return _actor_context; }
-    std::shared_ptr<Task> this_task() { return _task_context; }
-    void set_this_actor(std::shared_ptr<Actor> actor) { _actor_context = actor; }
-    void set_this_task(std::shared_ptr<Task> task) { _task_context = task; }
+    std::shared_ptr<Yarn> this_yarn() { return _yarn_context; }
+    std::shared_ptr<Fiber> this_fiber() { return _fiber_context; }
+    void set_this_yarn(std::shared_ptr<Yarn> yarn) { _yarn_context = yarn; }
+    void set_this_fiber(std::shared_ptr<Fiber> fiber) { _fiber_context = fiber; }
 
     void* yield()
     {
-        (*(_task_context->_coro_context))();
-        return _task_context->_yield_context;
+        (*(_fiber_context->_coro_context))();
+        return _fiber_context->_yield_context;
     }
     
     void defer()
     {
-        _actor_context->defer();
+        _yarn_context->defer();
     }
 
-    void set_yield_data(std::shared_ptr<Task> t, void* data)
+    void set_yield_data(std::shared_ptr<Fiber> t, void* data)
     {
         t->_yield_context = data;
     }

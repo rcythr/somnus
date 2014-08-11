@@ -4,42 +4,42 @@
 #include <thread>
 #include <chrono>
 
-void addTask(std::shared_ptr<somnus::Actor> actor, int i)
+void addFiber(std::shared_ptr<somnus::Yarn> yarn, int i)
 {
-    actor->run([=]()
+    yarn->run([=]()
     {
-        printf("Running task %d\n", i);
+        printf("Running fiber %d\n", i);
     });
 }
 
 int main(int argc, char* argv[])
 {
-    auto actor = std::make_shared<somnus::Actor>();
+    auto yarn = std::make_shared<somnus::Yarn>();
 
-    // Here is a long running task (8 seconds total).
-    actor->run([&]() {
+    // Here is a long running fiber (8 seconds total).
+    yarn->run([&]() {
 
         printf("Sleep 1\n");
         std::this_thread::sleep_for(std::chrono::seconds(2));
     
-        addTask(actor, 1);
-        addTask(actor, 2);
+        addFiber(yarn, 1);
+        addFiber(yarn, 2);
 
         somnus::defer();
 
         printf("Sleep 2\n");
         std::this_thread::sleep_for(std::chrono::seconds(2));
         
-        addTask(actor, 3);
-        addTask(actor, 4);
+        addFiber(yarn, 3);
+        addFiber(yarn, 4);
         
         // somnus::defer();
 
         printf("Sleep 3\n");
         std::this_thread::sleep_for(std::chrono::seconds(2));
         
-        addTask(actor, 5);
-        addTask(actor, 6);
+        addFiber(yarn, 5);
+        addFiber(yarn, 6);
 
         somnus::defer();
         

@@ -5,8 +5,8 @@ int main(int argc, char* argv[])
 {
     somnus::Channel<int*> channel;
 
-    auto producer = std::make_shared<somnus::Actor>();
-    auto consumer = std::make_shared<somnus::Actor>();
+    auto producer = std::make_shared<somnus::Yarn>();
+    auto consumer = std::make_shared<somnus::Yarn>();
 
     consumer->run([&] ()
     {
