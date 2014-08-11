@@ -20,6 +20,8 @@ namespace somnus
         void run(std::function<void()> fn);
         void run(std::shared_ptr<Task> task);
 
+        void defer();
+
     private:
         std::mutex _m;
         std::condition_variable _cv;
@@ -35,5 +37,8 @@ namespace somnus
     std::shared_ptr<Task> this_task();
 
     void* yield();
+    
+    void defer();
+
     void set_yield_data(std::shared_ptr<Task> t, void* data);
 }

@@ -42,6 +42,7 @@ namespace somnus
 
         std::shared_ptr<coro> _coroutine;
         coro::caller_type* _coro_context;
+
         void* _yield_context;
     };
 
@@ -53,14 +54,18 @@ namespace somnus
 
             while(true)
             {
-                std::unique_lock<std::mutex> ul(_m);
-                while(_waiting.empty())
+                std::shared_ptr<Task> task;
+                
                 {
-                    _cv.wait(ul);
-                }
+                    std::unique_lock<std::mutex> ul(_m);
+                    while(_waiting.empty())
+                    {
+                        _cv.wait(ul);
+                    }
 
-                std::shared_ptr<Task> task = _waiting.front();
-                _waiting.pop();
+                    task = _waiting.front();
+                    _waiting.pop();
+                }
                
                 set_this_task(task);
                 task->run();
@@ -82,6 +87,26 @@ namespace somnus
         _cv.notify_one();
     }
 
+    void Actor::defer()
+    {
+        std::shared_ptr<Task> task = this_task();
+        bool shouldDefer = false;
+
+        {
+            std::unique_lock<std::mutex> ul(_m);
+            if(!_waiting.empty())
+            {
+                shouldDefer = true;
+                _waiting.push(task);
+            }
+        }
+
+        if(shouldDefer)
+        {
+            (*(task->_coro_context))();
+        }
+    }
+
     std::shared_ptr<Actor> this_actor() { return _actor_context; }
     std::shared_ptr<Task> this_task() { return _task_context; }
     void set_this_actor(std::shared_ptr<Actor> actor) { _actor_context = actor; }
@@ -91,6 +116,11 @@ namespace somnus
     {
         (*(_task_context->_coro_context))();
         return _task_context->_yield_context;
+    }
+    
+    void defer()
+    {
+        _actor_context->defer();
     }
 
     void set_yield_data(std::shared_ptr<Task> t, void* data)
