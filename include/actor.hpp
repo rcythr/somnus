@@ -11,11 +11,19 @@ namespace somnus
 {
     struct Task;
 
+    enum class ThreadMode
+    {
+        spawn,
+        defer
+    };
+
     struct Actor : std::enable_shared_from_this<Actor>
     {
-        Actor();
+        Actor(ThreadMode mode = ThreadMode::spawn);
         Actor(const Actor& other) = delete;
         Actor(Actor&& other) = delete;
+
+        void start();
 
         void run(std::function<void()> fn);
         void run(std::shared_ptr<Task> task);

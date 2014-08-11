@@ -46,31 +46,36 @@ namespace somnus
         void* _yield_context;
     };
 
-    Actor::Actor()
+    Actor::Actor(ThreadMode mode)
     {
-        _t = std::thread([this]() 
+        if(mode == ThreadMode::spawn)
         {
-            set_this_actor(shared_from_this());
+            _t = std::thread(std::bind(&Actor::start, this));
+        }
+    }
 
-            while(true)
+    void Actor::start()
+    {
+        set_this_actor(shared_from_this());
+
+        while(true)
+        {
+            std::shared_ptr<Task> task;
+            
             {
-                std::shared_ptr<Task> task;
-                
+                std::unique_lock<std::mutex> ul(_m);
+                while(_waiting.empty())
                 {
-                    std::unique_lock<std::mutex> ul(_m);
-                    while(_waiting.empty())
-                    {
-                        _cv.wait(ul);
-                    }
-
-                    task = _waiting.front();
-                    _waiting.pop();
+                    _cv.wait(ul);
                 }
-               
-                set_this_task(task);
-                task->run();
+
+                task = _waiting.front();
+                _waiting.pop();
             }
-        });
+           
+            set_this_task(task);
+            task->run();
+        }
     }
 
     void Actor::run(std::function<void()> fn)
