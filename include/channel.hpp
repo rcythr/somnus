@@ -20,7 +20,6 @@ namespace somnus
             _m.lock();
             if(!_queue.empty())
             {
-                printf("Pop from queue\n");
                 void* data = _queue.front();
                 _queue.pop();
 
@@ -32,7 +31,6 @@ namespace somnus
             }
             else
             {
-                printf("Deferred pop\n");
                 std::shared_ptr<Actor> actor = this_actor();
                 std::shared_ptr<Task> task = this_task();
 
@@ -57,7 +55,6 @@ namespace somnus
 
             if(!_waiting_tasks.empty())
             {
-                printf("Push to waiting task.\n");
                 auto actor_task = _waiting_tasks.front();
                 _waiting_tasks.pop();
 
@@ -72,7 +69,6 @@ namespace somnus
             }
             else
             {
-                printf("Push to queue.\n");
                 _queue.push(t);
                 _m.unlock();
                 return;
