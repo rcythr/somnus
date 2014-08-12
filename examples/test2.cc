@@ -24,8 +24,8 @@ int main(int argc, char* argv[])
 {
     somnus::Channel<int> channel;
 
-    auto producer = std::make_shared<somnus::Yarn>();
-    auto consumer = std::make_shared<somnus::Yarn>();
+    auto producer = std::make_shared<somnus::Rope>();
+    auto consumer = std::make_shared<somnus::Rope>();
 
     consumer->run([&] ()
     {

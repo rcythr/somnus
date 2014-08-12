@@ -1,5 +1,5 @@
 
-#include <somnus/yarn.hpp>
+#include <somnus/rope.hpp>
 
 /**
  * This example showcases the base functionality supported by somnus: 
@@ -13,11 +13,11 @@
  */
 int main(int argc, char* argv[])
 {
-    auto yarn = std::make_shared<somnus::Yarn>();
+    auto rope = std::make_shared<somnus::Rope>();
 
     std::shared_ptr<somnus::Fiber> fiber = nullptr;
 
-    yarn->run([&] () 
+    rope->run([&] () 
     {
         printf("PART 1\n");
 
@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
 
     std::this_thread::sleep_for(std::chrono::seconds(1));
 
-    yarn->run(fiber);
+    rope->run(fiber);
 
     std::this_thread::sleep_for(std::chrono::seconds(1));
 

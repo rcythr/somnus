@@ -14,7 +14,7 @@ namespace somnus
      */
     struct Fiber;
 
-    struct Yarn : std::enable_shared_from_this<Yarn>
+    struct Rope : std::enable_shared_from_this<Rope>
     {
         enum class ThreadMode
         {
@@ -22,9 +22,9 @@ namespace somnus
             defer
         };
 
-        Yarn(ThreadMode mode = ThreadMode::spawn);
-        Yarn(const Yarn& other) = delete;
-        Yarn(Yarn&& other) = delete;
+        Rope(ThreadMode mode = ThreadMode::spawn);
+        Rope(const Rope& other) = delete;
+        Rope(Rope&& other) = delete;
 
         void start();
 
@@ -42,15 +42,17 @@ namespace somnus
         std::thread _t;
     };
 
-    std::shared_ptr<Yarn> this_yarn();
-    void set_this_yarn(std::shared_ptr<Yarn> yarn);
+    std::shared_ptr<Rope> this_rope();
+    void set_this_rope(std::shared_ptr<Rope> rope);
 
     void set_this_fiber(std::shared_ptr<Fiber> fiber);
     std::shared_ptr<Fiber> this_fiber();
 
-    void* yield();
+    std::shared_ptr<void> yield();
     
     void defer();
 
     void set_yield_data(std::shared_ptr<Fiber> t, void* data);
+
+    void set_yield_data(std::shared_ptr<Fiber> t, std::shared_ptr<void> data);
 }

@@ -3,7 +3,7 @@
 
 /**
  * This example shows the transfer of information from one yarn to another via a channel 
- *      with a non-pointer type. The consumer yields if no data is in the channel. It resumes
+ *      with a pointer type. The consumer yields if no data is in the channel. It resumes
  *      executing only when information is available.
  *
  * Output:
@@ -24,8 +24,8 @@ int main(int argc, char* argv[])
 {
     somnus::Channel<int*> channel;
 
-    auto producer = std::make_shared<somnus::Yarn>();
-    auto consumer = std::make_shared<somnus::Yarn>();
+    auto producer = std::make_shared<somnus::Rope>();
+    auto consumer = std::make_shared<somnus::Rope>();
 
     consumer->run([&] ()
     {

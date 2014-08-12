@@ -1,74 +1,51 @@
 
 #include <somnus/channel.hpp>
 
-#include <thread>
-#include <chrono>
-
-void addFiber(std::shared_ptr<somnus::Yarn> yarn, int i)
-{
-    yarn->run([=]()
-    {
-        printf("Running fiber %d\n", i);
-    });
-}
-
 /**
- * This example shows the usage of the defer() function. defer() allows a fiber to 
- *      yield to other fibers which are waiting to execute.
+ * This example shows the transfer of information from one yarn to another via a channel 
+ *      with a std::shared_ptr type. The consumer yields if no data is in the channel. It resumes
+ *      executing only when information is available.
  *
  * Output:
- *      Sleep 1
- *      [ ~2 second pause ]
- *      Running fiber 1
- *      Running fiber 2
- *      Sleep 2
- *      [ ~2 second pause ]
- *      Sleep 3
- *      [ ~2 second pause ]
- *      Running fiber 3
- *      Running fiber 4
- *      Running fiber 5
- *      Running fiber 6
- *      Sleep 4
- *      [ ~4 second pause]
+ *      [ ~1 second pause ]
+ *      0
+ *      1
+ *      2
+ *      3
+ *      4
+ *      5
+ *      6
+ *      7
+ *      8
+ *      9
+ *      [ ~1 second pause ]
  */
 int main(int argc, char* argv[])
 {
-    auto yarn = std::make_shared<somnus::Yarn>();
+    somnus::Channel<std::shared_ptr<int>> channel;
 
-    // Here is a long running fiber (8 seconds total).
-    yarn->run([&]() {
+    auto producer = std::make_shared<somnus::Rope>();
+    auto consumer = std::make_shared<somnus::Rope>();
 
-        printf("Sleep 1\n");
-        std::this_thread::sleep_for(std::chrono::seconds(2));
-    
-        addFiber(yarn, 1);
-        addFiber(yarn, 2);
-
-        somnus::defer();
-
-        printf("Sleep 2\n");
-        std::this_thread::sleep_for(std::chrono::seconds(2));
-        
-        addFiber(yarn, 3);
-        addFiber(yarn, 4);
-        
-        // somnus::defer();
-
-        printf("Sleep 3\n");
-        std::this_thread::sleep_for(std::chrono::seconds(2));
-        
-        addFiber(yarn, 5);
-        addFiber(yarn, 6);
-
-        somnus::defer();
-        
-        printf("Sleep 4\n");
-        std::this_thread::sleep_for(std::chrono::seconds(2));
-
+    consumer->run([&] ()
+    {
+        for(int i=0; i < 10; ++i)
+        {
+            printf("%d\n", *(channel.pop()));
+        }
     });
 
-    std::this_thread::sleep_for(std::chrono::seconds(10));
+    std::this_thread::sleep_for(std::chrono::seconds(1));
     
+    producer->run([&] () 
+    {
+        for(int i = 0; i < 10; ++i)
+        {
+            channel.push(std::make_shared<int>(i));
+        }
+    });
+
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+
     return 0;
 }

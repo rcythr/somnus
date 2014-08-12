@@ -1,5 +1,5 @@
 
-#include <somnus/yarn.hpp>
+#include <somnus/rope.hpp>
 
 #include <stdexcept>
 #include <boost/coroutine/coroutine.hpp>
@@ -8,7 +8,7 @@ using namespace somnus;
 
 typedef boost::coroutines::coroutine<void()> coro;
 
-thread_local std::shared_ptr<Yarn> _yarn_context = nullptr;
+thread_local std::shared_ptr<Rope> _rope_context = nullptr;
 thread_local std::shared_ptr<Fiber> _fiber_context = nullptr;
 
 namespace somnus
@@ -44,20 +44,20 @@ namespace somnus
         std::shared_ptr<coro> _coroutine;
         coro::caller_type* _coro_context;
 
-        void* _yield_context;
+        std::shared_ptr<void> _yield_context;
     };
 
-    Yarn::Yarn(ThreadMode mode)
+    Rope::Rope(ThreadMode mode)
     {
         if(mode == ThreadMode::spawn)
         {
-            _t = std::thread(std::bind(&Yarn::start, this));
+            _t = std::thread(std::bind(&Rope::start, this));
         }
     }
 
-    void Yarn::start()
+    void Rope::start()
     {
-        set_this_yarn(shared_from_this());
+        set_this_rope(shared_from_this());
 
         while(true)
         {
@@ -79,12 +79,12 @@ namespace somnus
         }
     }
 
-    void Yarn::run(std::function<void()> fn)
+    void Rope::run(std::function<void()> fn)
     {
         run(std::make_shared<Fiber>(fn));
     }
 
-    void Yarn::run(std::shared_ptr<Fiber> fiber)
+    void Rope::run(std::shared_ptr<Fiber> fiber)
     {
         {
             std::unique_lock<std::mutex> ul(_m);
@@ -93,7 +93,7 @@ namespace somnus
         _cv.notify_one();
     }
 
-    void Yarn::defer()
+    void Rope::defer()
     {
         std::shared_ptr<Fiber> fiber = this_fiber();
         bool shouldDefer = false;
@@ -113,14 +113,14 @@ namespace somnus
         }
     }
 
-    std::shared_ptr<Yarn> this_yarn() 
+    std::shared_ptr<Rope> this_rope() 
     { 
-        if(_yarn_context == nullptr)
+        if(_rope_context == nullptr)
         {
-            throw std::runtime_error("Call to this_yarn() made outside of fiber.");
+            throw std::runtime_error("Call to this_rope() made outside of fiber.");
         }
 
-        return _yarn_context; 
+        return _rope_context; 
     }
 
     std::shared_ptr<Fiber> this_fiber() 
@@ -133,9 +133,9 @@ namespace somnus
         return _fiber_context; 
     }
 
-    void set_this_yarn(std::shared_ptr<Yarn> yarn) 
+    void set_this_rope(std::shared_ptr<Rope> rope) 
     { 
-        _yarn_context = yarn; 
+        _rope_context = rope; 
     }
 
     void set_this_fiber(std::shared_ptr<Fiber> fiber) 
@@ -143,7 +143,7 @@ namespace somnus
         _fiber_context = fiber; 
     }
 
-    void* yield()
+    std::shared_ptr<void> yield()
     {
         if(_fiber_context == nullptr)
         {
@@ -156,15 +156,20 @@ namespace somnus
     
     void defer()
     {
-        if(_yarn_context == nullptr)
+        if(_rope_context == nullptr)
         {
             throw std::runtime_error("Call to defer() made outside of fiber.");
         }
 
-        _yarn_context->defer();
+        _rope_context->defer();
     }
 
     void set_yield_data(std::shared_ptr<Fiber> t, void* data)
+    {
+        t->_yield_context = std::shared_ptr<void>((void*)data, [](void* data) {/* Lifetime managed elsewhere. Don't delete it. */});
+    }
+    
+    void set_yield_data(std::shared_ptr<Fiber> t, std::shared_ptr<void> data)
     {
         t->_yield_context = data;
     }
