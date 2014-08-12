@@ -19,6 +19,7 @@ namespace somnus
             : _fn(fn)
             , _coroutine(nullptr)
             , _coro_context(nullptr)
+            , _switch_rope(nullptr)
             , _yield_context(nullptr)
         {
         }
@@ -43,6 +44,8 @@ namespace somnus
 
         std::shared_ptr<coro> _coroutine;
         coro::caller_type* _coro_context;
+
+        std::shared_ptr<Rope> _switch_rope;
 
         std::shared_ptr<void> _yield_context;
     };
@@ -76,6 +79,17 @@ namespace somnus
            
             set_this_fiber(fiber);
             fiber->run();
+
+            if(fiber->_switch_rope && (*(fiber->_coroutine)))
+            {
+                auto other_rope = fiber->_switch_rope;
+                {
+                    std::unique_lock<std::mutex> ul(other_rope->_m);
+                    other_rope->_waiting.push(fiber);
+                    fiber->_switch_rope = nullptr;
+                }
+                other_rope->_cv.notify_one();
+            }
         }
     }
 
@@ -162,6 +176,17 @@ namespace somnus
         }
 
         _rope_context->defer();
+    }
+
+    void switch_to_rope(std::shared_ptr<Rope> rope)
+    {
+        if(_rope_context == nullptr)
+        {
+            throw std::runtime_error("Call to switch_to_rope() made outside of fiber.");
+        }
+    
+        _fiber_context->_switch_rope = rope;
+        (*(_fiber_context->_coro_context))();
     }
 
     void set_yield_data(std::shared_ptr<Fiber> t, void* data)

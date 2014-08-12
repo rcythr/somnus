@@ -9,9 +9,6 @@
 
 namespace somnus
 {
-    /**
-     * 
-     */
     struct Fiber;
 
     struct Rope : std::enable_shared_from_this<Rope>
@@ -51,6 +48,8 @@ namespace somnus
     std::shared_ptr<void> yield();
     
     void defer();
+
+    void switch_to_rope(std::shared_ptr<Rope> rope);
 
     void set_yield_data(std::shared_ptr<Fiber> t, void* data);
 
