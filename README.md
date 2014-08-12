@@ -5,7 +5,7 @@ Somnus is a co-operative threading support library  (See: [Fiber](http://en.wiki
 
 Fibers are a powerful concurrency tool that prevents unnecessary blocking and operating system thread context switching. It's not a panacea, but it is a useful tool which, utilized in the proper way, yields massive performance gains.
 
-Refer to the wiki (under construction) for type and function documentation.
+Refer to the [wiki](https://github.com/rcythr/somnus/wiki) for type and function documentation.
 
 ### Channel Examples
 
