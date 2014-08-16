@@ -23,7 +23,7 @@ An event dispatcher class is supplied along with the other functionality of the 
 
 [Event Dispatcher Example](examples/test8.cc)
 
-[Configuration File Example](examles/test8.cfg)
+[Configuration File Example](examples/test8.cfg)
 
 ### Other Examples
 
