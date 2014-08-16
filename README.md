@@ -17,6 +17,14 @@ The canonical example of any coroutine based model is an example with a channel.
 
 [std::shared_ptr type example](examples/test4.cc)
 
+### Event Dispatch Examples
+
+An event dispatcher class is supplied along with the other functionality of the library. It uses Ropes internally based upon a configuration loaded from a file.
+
+[Event Dispatcher Example](examples/test8.cc)
+
+[Configuration File Example](examles/test8.cfg)
+
 ### Other Examples
 
 Long running tasks prevent other tasks from doing useful work, including initiation of long running operations. To prevent this, long running tasks should carefully place calls to **defer()** which switches to other waiting tasks, if needed. Execution will resume after all other waiting tasks have had an opportunity to run.
